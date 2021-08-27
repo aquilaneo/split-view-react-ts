@@ -1,26 +1,16 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import * as SplitView from "./splitView";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+function App () {
+	return (
+		<div style={{height: "100vh"}}>
+			<SplitView.SplitView>
+				<SplitView.SplitPanel width={"20%"} offset={0}>あああ</SplitView.SplitPanel>
+				<SplitView.SplitPanel width={"60%"} offset={0}>いいい</SplitView.SplitPanel>
+				<SplitView.SplitPanel width={"20%"} offset={0}>ううう</SplitView.SplitPanel>
+			</SplitView.SplitView>
+		</div>
+	);
 }
 
 export default App;
