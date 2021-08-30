@@ -1,18 +1,25 @@
 import React, {DetailedReactHTMLElement, ReactNode} from "react";
 
 export class SplitView extends React.Component<{ children: ReactNode[] }> {
+	state: { offsets: number[] };
 	draggingIndex = -1;
 	oldMousePosition = -1;
-	state: { offsets: number[] };
+	myRef: React.RefObject<HTMLDivElement>;
+	width = 0;
 
 	constructor (props: { children: ReactNode[] }) {
 		super (props);
 		this.state = {
 			offsets: new Array (2 * this.props.children.length - 1).fill (0),
 		};
+
+		this.myRef = React.createRef ();
+
 		this.startDragging = this.startDragging.bind (this);
 		this.continueDragging = this.continueDragging.bind (this);
 		this.stopDragging = this.stopDragging.bind (this);
+		this.onResize = this.onResize.bind (this);
+		window.onresize = this.onResize;
 	}
 
 	// パネル幅を変更
@@ -44,6 +51,13 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 		this.oldMousePosition = -1;
 	}
 
+	onResize () {
+		if (this.myRef.current) {
+			this.width = this.myRef.current.clientWidth;
+			console.log (this.width);
+		}
+	}
+
 	render () {
 		const style = {
 			display: "flex",
@@ -70,7 +84,7 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 		}));
 
 		return (
-			<div style={style}
+			<div style={style} ref={this.myRef}
 				 onMouseMove={this.continueDragging} onMouseUp={this.stopDragging} onMouseLeave={this.stopDragging}>
 				{elements}
 			</div>
@@ -104,7 +118,7 @@ export class SplitSeparator extends React.Component<{ index: number, parent: Spl
 
 	render () {
 		const style = {
-			width: "4px",
+			width: "2px",
 			height: "100%",
 			backgroundColor: "lightgray",
 			cursor: "col-resize"
