@@ -1,17 +1,14 @@
 import React, {DetailedReactHTMLElement, ReactNode} from "react";
 
 export class SplitView extends React.Component<{ children: ReactNode[] }> {
-	state: { offsets: number[] };
+	state: { panelsWidthPx: number[] } = {panelsWidthPx: []};
 	draggingIndex = -1;
 	oldMousePosition = -1;
 	myRef: React.RefObject<HTMLDivElement>;
-	width = 0;
+	splitViewWidth = 0;
 
 	constructor (props: { children: ReactNode[] }) {
 		super (props);
-		this.state = {
-			offsets: new Array (2 * this.props.children.length - 1).fill (0),
-		};
 
 		this.myRef = React.createRef ();
 
@@ -22,12 +19,16 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 		window.onresize = this.onResize;
 	}
 
+	componentDidMount () {
+		this.onResize ();
+	}
+
 	// パネル幅を変更
 	resizePanels (index: number, delta: number) {
-		const offsets = [...this.state.offsets];
-		offsets[index - 1] += delta;
-		offsets[index + 1] -= delta;
-		this.setState ({...this.state, offsets: offsets});
+		// const offsets = [...this.state.offsets];
+		// offsets[index - 1] += delta;
+		// offsets[index + 1] -= delta;
+		// this.setState ({...this.state, offsets: offsets});
 	}
 
 	// ドラッグ開始
@@ -53,9 +54,19 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 
 	onResize () {
 		if (this.myRef.current) {
-			this.width = this.myRef.current.clientWidth;
-			console.log (this.width);
+			this.splitViewWidth = this.myRef.current.clientWidth;
+			this.calcPanelsWidthPx ();
 		}
+	}
+
+	calcPanelsWidthPx () {
+		const panelsWidthPx = new Array (this.props.children.length).fill (0);
+		for (let i = 0; i < this.props.children.length; i++) {
+			const element = this.props.children[i] as DetailedReactHTMLElement<any, HTMLElement>;
+			const percent = Number (element.props.width.replace ("%", "")) / 100;
+			panelsWidthPx[i] = Math.round (this.splitViewWidth * percent);
+		}
+		this.setState ({...this.state, panelsWidthPx: panelsWidthPx});
 	}
 
 	render () {
@@ -70,7 +81,7 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 		for (let i = 0; i < this.props.children.length - 1; i++) {
 			const element = this.props.children[i] as DetailedReactHTMLElement<any, HTMLElement>;
 			elements.push (React.cloneElement (element, {
-				offset: this.state.offsets[keyCounter],
+				widthPx: `${this.state.panelsWidthPx[i]}px`,
 				key: keyCounter,
 			}));
 			keyCounter++;
@@ -79,7 +90,7 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 		}
 		const element = this.props.children[this.props.children.length - 1] as DetailedReactHTMLElement<any, HTMLElement>
 		elements.push (React.cloneElement (element, {
-			offset: this.state.offsets[keyCounter],
+			widthPx: `${this.state.panelsWidthPx[this.props.children.length - 1]}px`,
 			key: keyCounter,
 		}));
 
@@ -92,10 +103,10 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 	}
 }
 
-export class SplitPanel extends React.Component<{ width: string, offset: number }> {
+export class SplitPanel extends React.Component<{ width: string, widthPx: number }> {
 	render () {
 		const style = {
-			width: `calc(${this.props.width} + ${this.props.offset}px)`,
+			width: `${this.props.widthPx}`,
 			height: "100%",
 		}
 
