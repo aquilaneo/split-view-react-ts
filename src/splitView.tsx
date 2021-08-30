@@ -47,11 +47,22 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 		leftWidthPercent = (leftWidthPx / this.splitViewWidth) * 100;
 		rightWidthPercent = (rightWidthPx / this.splitViewWidth) * 100;
 
+		// minWidthとmaxWidthを取得
+		const leftElement = this.props.children[index] as DetailedReactHTMLElement<any, HTMLElement>;
+		const rightElement = this.props.children[index + 1] as DetailedReactHTMLElement<any, HTMLElement>;
+		const leftPanelMinWidth = leftElement.props.minWidth ? Number (leftElement.props.minWidth.replace ("%", "")) : 0;
+		const leftPanelMaxWidth = leftElement.props.maxWidth ? Number (leftElement.props.maxWidth.replace ("%", "")) : 100;
+		const rightPanelMinWidth = rightElement.props.minWidth ? Number (rightElement.props.minWidth.replace ("%", "")) : 0;
+		const rightPanelMaxWidth = rightElement.props.maxWidth ? Number (rightElement.props.maxWidth.replace ("%", "")) : 100;
+
 		// 反映させる
-		const panelsWidthPercent = [...this.state.panelsWidthPercent];
-		panelsWidthPercent[index] = `${leftWidthPercent}%`;
-		panelsWidthPercent[index + 1] = `${rightWidthPercent}%`;
-		this.setState ({...this.state, panelsWidthPercent: panelsWidthPercent});
+		if (leftWidthPercent >= leftPanelMinWidth && rightWidthPercent >= rightPanelMinWidth &&
+			leftWidthPercent <= leftPanelMaxWidth && rightWidthPercent <= rightPanelMaxWidth) {
+			const panelsWidthPercent = [...this.state.panelsWidthPercent];
+			panelsWidthPercent[index] = `${leftWidthPercent}%`;
+			panelsWidthPercent[index + 1] = `${rightWidthPercent}%`;
+			this.setState ({...this.state, panelsWidthPercent: panelsWidthPercent});
+		}
 	}
 
 	// ドラッグ開始
@@ -92,14 +103,14 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 		for (let i = 0; i < this.props.children.length - 1; i++) {
 			const element = this.props.children[i] as DetailedReactHTMLElement<any, HTMLElement>;
 			elements.push (React.cloneElement (element, {
-				widthPx: this.state.panelsWidthPercent[i],
+				widthPercent: this.state.panelsWidthPercent[i],
 				key: `Panel${i}`,
 			}));
 			elements.push (<SplitSeparator key={`Separator${i}`} index={i} parent={this}/>);
 		}
 		const element = this.props.children[this.props.children.length - 1] as DetailedReactHTMLElement<any, HTMLElement>
 		elements.push (React.cloneElement (element, {
-			widthPx: this.state.panelsWidthPercent[this.props.children.length - 1],
+			widthPercent: this.state.panelsWidthPercent[this.props.children.length - 1],
 			key: `Panel${this.props.children.length - 1}`,
 		}));
 
@@ -112,10 +123,10 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 	}
 }
 
-export class SplitPanel extends React.Component<{ initialWidth: string, widthPx: number }> {
+export class SplitPanel extends React.Component<{ initialWidth: string, minWidth?: string, maxWidth?: string, widthPercent?: number }> {
 	render () {
 		const style = {
-			width: `${this.props.widthPx}`,
+			width: `${this.props.widthPercent}`,
 			height: "100%",
 		}
 

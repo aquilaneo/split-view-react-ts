@@ -5,9 +5,9 @@ function App () {
 	return (
 		<div style={{height: "100vh"}}>
 			<SplitView.SplitView>
-				<SplitView.SplitPanel initialWidth={"20%"} widthPx={0}>あああ</SplitView.SplitPanel>
-				<SplitView.SplitPanel initialWidth={"60%"} widthPx={0}>いいい</SplitView.SplitPanel>
-				<SplitView.SplitPanel initialWidth={"20%"} widthPx={0}>ううう</SplitView.SplitPanel>
+				<SplitView.SplitPanel initialWidth={"20%"} minWidth={"10%"}>あああ</SplitView.SplitPanel>
+				<SplitView.SplitPanel initialWidth={"60%"} minWidth={"40%"}>いいい</SplitView.SplitPanel>
+				<SplitView.SplitPanel initialWidth={"20%"} minWidth={"10%"}>ううう</SplitView.SplitPanel>
 			</SplitView.SplitView>
 		</div>
 	);
