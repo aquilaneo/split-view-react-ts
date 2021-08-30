@@ -1,7 +1,7 @@
 import React, {DetailedReactHTMLElement, ReactNode} from "react";
 
 export class SplitView extends React.Component<{ children: ReactNode[] }> {
-	state: { panelsWidthPx: number[] } = {panelsWidthPx: []};
+	state: { panelsWidthPercent: string[] } = {panelsWidthPercent: []};
 	draggingIndex = -1;
 	oldMousePosition = -1;
 	myRef: React.RefObject<HTMLDivElement>;
@@ -21,14 +21,37 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 
 	componentDidMount () {
 		this.onResize ();
+
+		// initialWidthのpropsをスタイルのwidthに反映
+		const panelsWidthPercent = new Array (this.props.children.length).fill ("0%") as string[];
+		for (let i = 0; i < this.props.children.length; i++) {
+			const element = this.props.children[i] as DetailedReactHTMLElement<any, HTMLElement>;
+			panelsWidthPercent[i] = element.props.initialWidth;
+		}
+		this.setState ({...this.state, panelsWidthPercent: panelsWidthPercent});
 	}
 
 	// パネル幅を変更
 	resizePanels (index: number, delta: number) {
-		// const offsets = [...this.state.offsets];
-		// offsets[index - 1] += delta;
-		// offsets[index + 1] -= delta;
-		// this.setState ({...this.state, offsets: offsets});
+		// 左右パネル幅をpx単位に
+		let leftWidthPercent = Number (this.state.panelsWidthPercent[index].replace ("%", ""));
+		let rightWidthPercent = Number (this.state.panelsWidthPercent[index + 1].replace ("%", ""));
+		let leftWidthPx = this.splitViewWidth * (leftWidthPercent / 100);
+		let rightWidthPx = this.splitViewWidth * (rightWidthPercent / 100);
+
+		// delta分加減算
+		leftWidthPx += delta;
+		rightWidthPx -= delta;
+
+		// 左右パネル幅を%単位に戻す
+		leftWidthPercent = (leftWidthPx / this.splitViewWidth) * 100;
+		rightWidthPercent = (rightWidthPx / this.splitViewWidth) * 100;
+
+		// 反映させる
+		const panelsWidthPercent = [...this.state.panelsWidthPercent];
+		panelsWidthPercent[index] = `${leftWidthPercent}%`;
+		panelsWidthPercent[index + 1] = `${rightWidthPercent}%`;
+		this.setState ({...this.state, panelsWidthPercent: panelsWidthPercent});
 	}
 
 	// ドラッグ開始
@@ -55,18 +78,7 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 	onResize () {
 		if (this.myRef.current) {
 			this.splitViewWidth = this.myRef.current.clientWidth;
-			this.calcPanelsWidthPx ();
 		}
-	}
-
-	calcPanelsWidthPx () {
-		const panelsWidthPx = new Array (this.props.children.length).fill (0);
-		for (let i = 0; i < this.props.children.length; i++) {
-			const element = this.props.children[i] as DetailedReactHTMLElement<any, HTMLElement>;
-			const percent = Number (element.props.width.replace ("%", "")) / 100;
-			panelsWidthPx[i] = Math.round (this.splitViewWidth * percent);
-		}
-		this.setState ({...this.state, panelsWidthPx: panelsWidthPx});
 	}
 
 	render () {
@@ -77,21 +89,18 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 
 		// SplitSeparatorを挿入
 		const elements = [];
-		let keyCounter = 0;
 		for (let i = 0; i < this.props.children.length - 1; i++) {
 			const element = this.props.children[i] as DetailedReactHTMLElement<any, HTMLElement>;
 			elements.push (React.cloneElement (element, {
-				widthPx: `${this.state.panelsWidthPx[i]}px`,
-				key: keyCounter,
+				widthPx: this.state.panelsWidthPercent[i],
+				key: `Panel${i}`,
 			}));
-			keyCounter++;
-			elements.push (<SplitSeparator key={keyCounter} index={keyCounter} parent={this}/>);
-			keyCounter++;
+			elements.push (<SplitSeparator key={`Separator${i}`} index={i} parent={this}/>);
 		}
 		const element = this.props.children[this.props.children.length - 1] as DetailedReactHTMLElement<any, HTMLElement>
 		elements.push (React.cloneElement (element, {
-			widthPx: `${this.state.panelsWidthPx[this.props.children.length - 1]}px`,
-			key: keyCounter,
+			widthPx: this.state.panelsWidthPercent[this.props.children.length - 1],
+			key: `Panel${this.props.children.length - 1}`,
 		}));
 
 		return (
@@ -103,7 +112,7 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 	}
 }
 
-export class SplitPanel extends React.Component<{ width: string, widthPx: number }> {
+export class SplitPanel extends React.Component<{ initialWidth: string, widthPx: number }> {
 	render () {
 		const style = {
 			width: `${this.props.widthPx}`,
