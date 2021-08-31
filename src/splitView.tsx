@@ -1,6 +1,6 @@
 import React, {DetailedReactHTMLElement, ReactNode} from "react";
 
-export class SplitView extends React.Component<{ children: ReactNode[] }> {
+export class SplitView extends React.Component<{ children: ReactNode[], id?: string }> {
 	state: { panelsWidthPercent: string[] } = {panelsWidthPercent: []};
 	draggingIndex = -1;
 	oldMousePosition = -1;
@@ -62,6 +62,14 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 			panelsWidthPercent[index] = `${leftWidthPercent}%`;
 			panelsWidthPercent[index + 1] = `${rightWidthPercent}%`;
 			this.setState ({...this.state, panelsWidthPercent: panelsWidthPercent});
+
+			// リサイズコールバックを呼ぶ
+			if (leftElement.props.onresize) {
+				leftElement.props.onresize ();
+			}
+			if (rightElement.props.onresize) {
+				rightElement.props.onresize ();
+			}
 		}
 	}
 
@@ -86,6 +94,7 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 		this.oldMousePosition = -1;
 	}
 
+	// ウィンドウリサイズ処理
 	onResize () {
 		if (this.myRef.current) {
 			this.splitViewWidth = this.myRef.current.clientWidth;
@@ -115,7 +124,7 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 		}));
 
 		return (
-			<div style={style} ref={this.myRef}
+			<div style={style} ref={this.myRef} id={this.props.id}
 				 onMouseMove={this.continueDragging} onMouseUp={this.stopDragging} onMouseLeave={this.stopDragging}>
 				{elements}
 			</div>
@@ -123,15 +132,18 @@ export class SplitView extends React.Component<{ children: ReactNode[] }> {
 	}
 }
 
-export class SplitPanel extends React.Component<{ initialWidth: string, minWidth?: string, maxWidth?: string, widthPercent?: number }> {
+export class SplitPanel extends React.Component<{
+	initialWidth: string, minWidth?: string, maxWidth?: string, widthPercent?: number, id?: string, onresize?: () => void
+}> {
 	render () {
+		const width = this.props.widthPercent ? this.props.widthPercent : this.props.initialWidth;
 		const style = {
-			width: `${this.props.widthPercent}`,
+			width: `${width}`,
 			height: "100%",
 		}
 
 		return (
-			<div style={style}>{this.props.children}</div>
+			<div style={style} id={this.props.id}>{this.props.children}</div>
 		);
 	}
 }
