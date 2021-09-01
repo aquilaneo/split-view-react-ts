@@ -16,7 +16,7 @@ export class SplitView extends React.Component<{ children: ReactNode[], id?: str
 		this.continueDragging = this.continueDragging.bind (this);
 		this.stopDragging = this.stopDragging.bind (this);
 		this.onResize = this.onResize.bind (this);
-		window.onresize = this.onResize;
+		window.addEventListener("resize", this.onResize);
 	}
 
 	componentDidMount () {
